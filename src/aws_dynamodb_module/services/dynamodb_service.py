@@ -11,6 +11,40 @@ from aws_dynamodb_module.utils.dynamodb_iterator import (DynamoIterator,
 
 
 class DynamodbService():
+    """
+        Example::
+            from aws_dynamodb_module.services.dynamodb_service import DynamodbService
+
+            from boto3.dynamodb.conditions import Key, Attr
+
+            dynamodb_service = DynamodbService()
+
+            dynamodb_service.add_batch_items(
+                items=[
+                    {
+                        "PK": "PK",
+                        "SK": "SK"
+                    }
+                ]
+            )
+
+            iter_items = dynamodb_service.db_iterator(
+                query_in={
+                    'IndexName': 'GSI1',
+                    'KeyConditionExpression': Key('GSI1PK').eq("PK")
+                    & Key('SK').begins_with("GSI1SK")
+                }
+            )
+
+            dynamodb_service.delete_batch_items(
+                items=[
+                    {
+                        "PK": "PK",
+                        "SK": "SK"
+                    }
+                ]
+            )
+    """
 
     def __init__(self) -> None:
         self._dynamodb_resource = _dynamodb_resource
