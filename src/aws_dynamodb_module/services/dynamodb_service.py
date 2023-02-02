@@ -83,15 +83,15 @@ class DynamodbService():
             overwrite_by_pkeys=['PK', 'SK']
         ) as batch:
             for item in items:
-                if isinstance(item, dict):
-                    batch.put_item(
-                        Item=item
-                    )
-                elif isinstance(item, BaseModel):
-                    exclude = item.get_exclude()
-                    batch.put_item(
-                        Item=item.dict(by_alias=True, exclude=exclude)
-                    )
+                item = self._standalize_dynamodb_item(item)
+                batch.put_item(Item=item)
+
+    def add_item(
+        self,
+        item: Union[dict, BaseModel],
+    ) -> None:
+        item = self._standalize_dynamodb_item(item)
+        _dynamodb_resource.put_item(Item=item)
 
     def delete_batch_items(
         self,
@@ -105,6 +105,18 @@ class DynamodbService():
                         'SK': delete_item['SK']
                     }
                 )
+
+    def delete_item(
+        self,
+        item: dict
+    ) -> None:
+        _dynamodb_resource.delete_item(
+            Key={
+                'PK': item.get('PK'),
+                'SK': item.get('SK')
+            },
+            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
+        )
 
     @staticmethod
     def get_combine_filter_express(
@@ -168,3 +180,12 @@ class DynamodbService():
             **kwargs
         )
         return response
+
+    def _standalize_dynamodb_item(
+        self,
+        item: Union[dict, BaseModel]
+    ) -> dict:
+        if isinstance(item, BaseModel):
+            exclude = item.get_exclude()
+            item = item.dict(by_alias=True, exclude=exclude)
+        return item
