@@ -89,9 +89,17 @@ class DynamodbService():
     def add_item(
         self,
         item: Union[dict, BaseModel],
+        condition_expression: str = "",
     ) -> None:
         item = self._standalize_dynamodb_item(item)
-        _dynamodb_resource.put_item(Item=item)
+        put_item_params = {
+            "Item": item,
+        }
+        if condition_expression:
+            put_item_params.update({
+                "ConditionExpression": condition_expression,
+            })
+        _dynamodb_resource.put_item(**put_item_params)
 
     def delete_batch_items(
         self,
