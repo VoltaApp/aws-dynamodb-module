@@ -1,4 +1,5 @@
 import functools
+from typing import List
 
 
 class FunctionBuilder:
@@ -27,10 +28,14 @@ class DynamoIterator:
         self.first_fetch = True
 
     def get_first_item(self) -> dict:
-        items = list(self)
+        items = self.get_items_as_list()
         if items:
             return items[0]
         return {}
+
+    def get_items_as_list(self) -> List[dict]:
+        items = list(self)
+        return items
 
     def _get_items(self, db_result):
         return db_result.get('Items', [])
