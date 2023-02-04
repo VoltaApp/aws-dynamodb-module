@@ -11,14 +11,23 @@ from aws_dynamodb_module.utils.dynamodb_iterator import (DynamoIterator,
 
 
 class DynamodbService():
-    """
-        Example::
-            from aws_dynamodb_module.services.dynamodb_service import DynamodbService
+    ''' Query and manipulate the AWS DynamoDB
 
+        Example::
+
+            # Example automatically generated from non-compiling source. May contain errors.
+            from aws_dynamodb_module.services.dynamodb_service import DynamodbService
             from boto3.dynamodb.conditions import Key, Attr
 
             dynamodb_service = DynamodbService()
-
+            # Add an item
+            dynamodb_service.add_item(
+                item={
+                    "PK": "PK",
+                    "SK": "SK"
+                }
+            )
+            # Add list of items
             dynamodb_service.add_batch_items(
                 items=[
                     {
@@ -27,15 +36,19 @@ class DynamodbService():
                     }
                 ]
             )
-
+            # Get items as iterator
             iter_items = dynamodb_service.db_iterator(
                 query_in={
-                    'IndexName': 'GSI1',
-                    'KeyConditionExpression': Key('GSI1PK').eq("PK")
-                    & Key('SK').begins_with("GSI1SK")
+                    "IndexName": "GSI1",
+                    "KeyConditionExpression": Key("GSI1PK").eq("PK")
+                    & Key("SK").begins_with("GSI1SK")
                 }
             )
-
+            # Get items as list
+            iter_items.get_items_as_list()
+            # Get first item in list
+            iter_items.get_first_item()
+            # Delete list of items
             dynamodb_service.delete_batch_items(
                 items=[
                     {
@@ -44,7 +57,7 @@ class DynamodbService():
                     }
                 ]
             )
-    """
+    '''
 
     def __init__(self) -> None:
         self._dynamodb_resource = _dynamodb_resource
@@ -64,9 +77,9 @@ class DynamodbService():
             gsi1_pk = "example_pk"
             gsi1_sk_prefix = "example_sk_prefix"
             krawgs = {
-                'IndexName': 'GSI1',
-                'KeyConditionExpression': Key('GSI1PK').eq(gsi1_pk)
-                & Key('GSI1SK').begins_with(gsi1_sk_prefix)
+                "IndexName": "GSI1",
+                "KeyConditionExpression": Key("GSI1PK").eq(gsi1_pk)
+                & Key("GSI1SK").begins_with(gsi1_sk_prefix)
             }
             iterator = db_iterator(**krawgs)
         """
@@ -80,7 +93,7 @@ class DynamodbService():
         items: List[Union[dict, BaseModel]],
     ) -> None:
         with self._dynamodb_resource.batch_writer(
-            overwrite_by_pkeys=['PK', 'SK']
+            overwrite_by_pkeys=["PK", "SK"]
         ) as batch:
             for item in items:
                 item = self._standalize_dynamodb_item(item)
@@ -109,30 +122,31 @@ class DynamodbService():
             for delete_item in items:
                 batch.delete_item(
                     Key={
-                        'PK': delete_item['PK'],
-                        'SK': delete_item['SK']
+                        "PK": delete_item["PK"],
+                        "SK": delete_item["SK"]
                     }
                 )
 
     def delete_item(
         self,
-        item: dict
+        item: dict,
+        condition_expression: str = "attribute_exists(PK) AND attribute_exists(SK)",
     ) -> None:
         _dynamodb_resource.delete_item(
             Key={
-                'PK': item.get('PK'),
-                'SK': item.get('SK')
+                "PK": item.get("PK"),
+                "SK": item.get("SK")
             },
-            ConditionExpression="attribute_exists(PK) AND attribute_exists(SK)",
+            ConditionExpression=condition_expression,
         )
 
     @staticmethod
     def get_combine_filter_express(
-        list_filter: list
+        filter_list: list
     ):
         filter_express = reduce(
             function=DynamodbService.chain_with_and_operator,
-            sequence=list_filter,
+            sequence=filter_list,
         )
         return filter_express
 
@@ -145,11 +159,10 @@ class DynamodbService():
 
     @staticmethod
     def chain_with_and_operator(
-        attrs_1: Equals,
-        attrs_2: Equals,
+        attr_1: Equals,
+        attr_2: Equals,
     ):
-        return And(attrs_1, attrs_2)
-
+        return And(attr_1, attr_2)
 
     @staticmethod
     def remove_pks(
@@ -157,7 +170,7 @@ class DynamodbService():
     ) -> None:
         keys = db_model.keys()
         for key in list(keys):
-            if key in ['PK', 'SK'] or 'GSI' in key:
+            if key in ["PK", "SK"] or "GSI" in key:
                 db_model.pop(key)
 
     def update_item(
@@ -165,17 +178,17 @@ class DynamodbService():
         pk: str,
         sk: str,
         update_expression: str,
+        condition_expression: str = "attribute_exists(PK) AND attribute_exists(SK)",
         expression_attribute_values: dict = {},
-        return_values: str = 'ALL_NEW',
+        return_values: str = "ALL_NEW",
     ) -> None:
         kwargs = {
             "Key": {
-                'PK': pk,
-                'SK': sk
+                "PK": pk,
+                "SK": sk
             },
             "UpdateExpression": update_expression,
-            "ConditionExpression": "attribute_exists(PK) AND "
-            "attribute_exists(SK)",
+            "ConditionExpression": condition_expression,
             "ReturnValues": return_values
         }
         if expression_attribute_values:
