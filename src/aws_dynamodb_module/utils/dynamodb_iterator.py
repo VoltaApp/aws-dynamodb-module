@@ -26,6 +26,12 @@ class DynamoIterator:
         self.last_evaluated_key = {}
         self.first_fetch = True
 
+    def get_first_item(self) -> dict:
+        items = list(self)
+        if items:
+            return items[0]
+        return {}
+
     def _get_items(self, db_result):
         return db_result.get('Items', [])
 
