@@ -1,4 +1,5 @@
 import functools
+from typing import List
 
 
 class FunctionBuilder:
@@ -26,10 +27,20 @@ class DynamoIterator:
         self.last_evaluated_key = {}
         self.first_fetch = True
 
-    def _get_items(self, db_result):
+    def get_first_item(self) -> dict:
+        items = self.get_items_as_list()
+        if items:
+            return items[0]
+        return {}
+
+    def get_items_as_list(self) -> List[dict]:
+        items = list(self)
+        return items
+
+    def _get_items(self, db_result) -> List[dict]:
         return db_result.get('Items', [])
 
-    def _has_more_results(self):
+    def _has_more_results(self) -> bool:
         return self.last_evaluated_key and len(self.data) == 0
 
     def __iter__(self):
@@ -46,15 +57,11 @@ class DynamoIterator:
                 result = self.func()
             self.last_evaluated_key = result.get('LastEvaluatedKey', None)
             self.data = self._get_items(result)
-            # self.batch_data = self._get_items(result)
 
         if len(self.data) <= 0:
             raise StopIteration
-        # else:
-        #     self.data = []
 
         return self.data.pop()
-        # return self.batch_data
 
     """Python 2.7 requireds next vs 3.7 that requires __next__
     hence we alias the function"""
