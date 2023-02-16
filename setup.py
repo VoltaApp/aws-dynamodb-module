@@ -16,7 +16,8 @@ setup(
     package_dir={"": "src"},
     zip_safe=False,
     install_requires=[
-        'boto3',
+        "boto3",
+        "pydantic[email]",
     ],
     python_requires='>=3.9',
     project_urls={
