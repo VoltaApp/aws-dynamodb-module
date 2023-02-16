@@ -1,11 +1,11 @@
 from functools import reduce
 from typing import List, Union
 
+import boto3
 from boto3.dynamodb.conditions import And, Equals, Or
 from pydantic import BaseModel
 
-from aws_dynamodb_module.aws.dynamodb import (_dynamodb_client,
-                                              _dynamodb_resource)
+from aws_dynamodb_module.config.aws_dynamodb import DEFAULT_DYNAMODB_CONFIG
 from aws_dynamodb_module.utils.dynamodb_iterator import (DynamoIterator,
                                                          FunctionBuilder)
 
@@ -15,11 +15,27 @@ class DynamodbService():
 
         Example::
 
-            # Example automatically generated from non-compiling source. May contain errors.
+            # Example generated from non-compiling source. May contain errors.
             from aws_dynamodb_module.services.dynamodb_service import DynamodbService
             from boto3.dynamodb.conditions import Key, Attr
+            from botocore.config import Config
 
-            dynamodb_service = DynamodbService()
+            dynamodb_table: str = "your_dynamodb_table"
+            dynamodb_config: dict = {
+                "service_name": "dynamodb",
+                "config": Config(
+                    region_name="ap-southeast-2",
+                    max_pool_connections=15,
+                    retries={
+                        "max_attempts": 10,
+                        "mode": "standard"
+                    },
+                )
+            }
+            dynamodb_service = DynamodbService(
+                dynamodb_table=dynamodb_table,
+                dynamodb_config=dynamodb_config
+            )
             # Add an item
             dynamodb_service.add_item(
                 item={
@@ -59,9 +75,18 @@ class DynamodbService():
             )
     '''
 
-    def __init__(self) -> None:
-        self._dynamodb_resource = _dynamodb_resource
-        self._dynamodb_client = _dynamodb_client
+    def __init__(
+        self,
+        dynamodb_table: str,
+        dynamodb_config: dict = DEFAULT_DYNAMODB_CONFIG,
+    ) -> None:
+        self._dynamodb_tbl = dynamodb_table
+        self._dynamodb_client = boto3.client(
+            **dynamodb_config,
+        )
+        self._dynamodb_resource = boto3.resource(
+            **dynamodb_config,
+        ).Table(dynamodb_table)
 
     def db_iterator(
         self,
