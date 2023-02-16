@@ -77,7 +77,7 @@ class DynamodbService():
 
     def __init__(
         self,
-        dynamodb_table: str,
+        dynamodb_table: str = "dev.volta",
         dynamodb_config: dict = DEFAULT_DYNAMODB_CONFIG,
     ) -> None:
         self._dynamodb_tbl = dynamodb_table
