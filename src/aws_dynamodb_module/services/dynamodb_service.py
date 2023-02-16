@@ -137,7 +137,7 @@ class DynamodbService():
             put_item_params.update({
                 "ConditionExpression": condition_expression,
             })
-        _dynamodb_resource.put_item(**put_item_params)
+        self._dynamodb_resource.put_item(**put_item_params)
 
     def delete_batch_items(
         self,
@@ -157,7 +157,7 @@ class DynamodbService():
         item: dict,
         condition_expression: str = "attribute_exists(PK) AND attribute_exists(SK)",
     ) -> None:
-        _dynamodb_resource.delete_item(
+        self._dynamodb_resource.delete_item(
             Key={
                 "PK": item.get("PK"),
                 "SK": item.get("SK")
