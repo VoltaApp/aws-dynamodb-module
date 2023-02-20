@@ -203,8 +203,8 @@ class DynamodbService():
         pk: str,
         sk: str,
         update_expression: str,
-        condition_expression: str = "attribute_exists(PK) AND attribute_exists(SK)",
         expression_attribute_values: dict = {},
+        condition_expression: str = "attribute_exists(PK) AND attribute_exists(SK)",
         return_values: str = "ALL_NEW",
     ) -> None:
         kwargs = {
